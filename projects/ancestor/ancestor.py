@@ -24,8 +24,7 @@ class Graph(object):
 
     def __init__(self, ansestors):
         self.nodes = {}
-        self.furthest = 0
-        self.furthest_nodes = []
+        self.furthest = None
 
         for (parent, child) in ansestors:
             self.add_parent_child(parent, child)
@@ -47,6 +46,7 @@ class Graph(object):
     def bfs(self, start):
         queue = Queue()
         node = self.nodes[start]
+        self.furthest = node
         queue.enqueue(node)
 
         while queue.size() > 0:
@@ -57,25 +57,26 @@ class Graph(object):
                 if not parent.visited:
                     parent.visited = True
                     queue.enqueue(parent)
-                    parent.weight = node.weight + 1
-                    if self.furthest < parent.weight:
-                        self.furthest_nodes = [parent]
-                        self.furthest = parent.weight
-                    elif self.furthest == parent.weight:
-                        self.furthest_nodes.append(parent)
+                    self.adjust_weight(parent, node.weight)
 
-        if self.furthest == 0:
+        return self.return_furthest_node()
+
+    def return_furthest_node(self):
+        if self.furthest.weight == 0:
             return -1
+        return self.furthest.value
 
-        smallest = None
-        for node in self.furthest_nodes:
-            if smallest is None or node.value < smallest.value:
-                smallest = node
-        return smallest.value
+    def adjust_weight(self, node, weight):
+        node.weight = weight + 1
+        if node.weight > self.furthest.weight:
+            self.furthest = node
+        elif node.weight == self.furthest.weight and node.value < self.furthest.value:
+            self.furthest = node
 
     def dfs(self, start):
         stack = Stack()
         start_node = self.get_node(start)
+        self.furthest = start_node
         stack.push(start_node)
 
         while stack.size() > 0:
@@ -85,22 +86,11 @@ class Graph(object):
                 parents = node.get_parents()
                 for each in parents:
                     stack.push(each)
-                    each.weight = node.weight + 1
-                    if self.furthest < each.weight:
-                        self.furthest = each.weight
-                        self.furthest_nodes = [each]
-                    elif self.furthest == each.weight:
-                        self.furthest_nodes.append(each)
-        if self.furthest == 0:
-            return -1
-        smallest = None
-        for node in self.furthest_nodes:
-            if smallest is None or smallest.value > node.value:
-                smallest = node
+                    self.adjust_weight(each, node.weight)
 
-        return smallest.value
+        return self.return_furthest_node()
 
 
 def earliest_ancestor(ancestors, starting_node):
     graph = Graph(ancestors)
-    return graph.dfs(starting_node)
+    return graph.bfs(starting_node)
