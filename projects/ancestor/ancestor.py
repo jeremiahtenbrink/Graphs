@@ -93,4 +93,4 @@ class Graph(object):
 
 def earliest_ancestor(ancestors, starting_node):
     graph = Graph(ancestors)
-    return graph.bfs(starting_node)
+    return graph.dfs(starting_node)
